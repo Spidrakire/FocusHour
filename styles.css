@@ -28,3 +28,32 @@ main > section:nth-of-type(even) .script{color:var(--gold)}
 main > section:nth-of-type(even) .glance-grid > div{border-color:rgba(255,255,255,.25)}
 main > section:nth-of-type(even) .join-form{color:var(--navy)}
 main > section:nth-of-type(odd) .example-grid .wide h3{color:var(--white)}
+
+/* A soft fade lets the photograph and copy share the hero. */
+.hero{position:relative;isolation:isolate;grid-template-columns:1fr;overflow:hidden}
+.hero .hero-image{position:absolute;inset:0;z-index:-2;min-height:0}
+.hero .hero-image img{object-position:70% center}
+.hero::after{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,#fffdf8 0%,rgba(255,253,248,.98) 28%,rgba(255,253,248,.88) 40%,rgba(255,253,248,.3) 56%,transparent 70%)}
+.hero-copy{width:58%;padding:80px clamp(30px,4vw,65px)}
+.hero-copy .brand{font-size:clamp(4rem,6.3vw,7rem)}
+.hero-copy .tag{font-size:clamp(1.7rem,2.4vw,2.7rem)}
+.hero-copy .lead,.hero-copy .lead + p{max-width:490px}
+.section-photo{margin:0 0 55px;overflow:hidden;border-radius:18px}
+.section-photo img{width:100%;height:360px;object-fit:cover;object-position:center 55%}
+.activity-icon{display:flex;align-items:center;justify-content:center;width:64px;height:64px;margin-bottom:22px;border-radius:50%;background:rgba(244,170,18,.15);color:var(--navy)}
+.activity-icon svg{width:36px;height:36px}
+.example-grid .wide .activity-icon{color:var(--gold)}
+@media(max-width:850px){
+ .hero-copy{width:100%;padding:60px 30px 310px}
+ .hero .hero-image img{object-position:75% bottom}
+ .hero::after{background:linear-gradient(180deg,#fffdf8 0%,rgba(255,253,248,.98) 45%,rgba(255,253,248,.8) 65%,transparent 85%)}
+ .hero-copy .narrow{max-width:650px}
+ .section-photo img{height:280px}
+}
+@media(max-width:540px){
+ .hero-copy{padding:48px 24px 260px}
+ .hero-copy .brand{font-size:3.7rem}
+ .hero-copy .tag{font-size:1.85rem}
+ .hero-copy .cta-row{gap:16px}
+ .section-photo img{height:220px}
+}
