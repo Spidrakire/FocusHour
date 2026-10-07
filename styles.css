@@ -57,3 +57,15 @@ main > section:nth-of-type(odd) .example-grid .wide h3{color:var(--white)}
  .hero-copy .cta-row{gap:16px}
  .section-photo img{height:220px}
 }
+
+/* Keep cards readable as the shorter page alternates section colours. */
+.glance .section-head{margin-bottom:40px}
+.glance h3{font-family:var(--sans);font-size:1.2rem;line-height:1.4;margin:8px 0}
+.glance .glance-grid > div{padding:0 22px}
+main > section.examples .example-grid article{color:var(--navy)}
+main > section.examples .example-grid h3{color:var(--navy)}
+main > section.examples .example-grid .wide,
+main > section.examples .example-grid .wide h3{color:var(--white)}
+main > section.membership .price small{color:inherit}
+.step-icon{margin-bottom:24px}
+@media(max-width:850px){.glance .glance-grid > div{padding:28px 22px}}
