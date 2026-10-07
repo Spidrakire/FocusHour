@@ -69,3 +69,8 @@ main > section.examples .example-grid .wide h3{color:var(--white)}
 main > section.membership .price small{color:inherit}
 .step-icon{margin-bottom:24px}
 @media(max-width:850px){.glance .glance-grid > div{padding:28px 22px}}
+
+/* Show the complete activity collage and frame the original portrait photograph. */
+.examples .section-photo img{height:auto}
+.hero .hero-image img{left:40%;width:60%;object-position:60% 40%}
+@media(max-width:850px){.hero .hero-image img{left:0;width:100%;object-position:60% 40%}}
