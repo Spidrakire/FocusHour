@@ -60,7 +60,6 @@ main > section:nth-of-type(odd) .example-grid .wide h3{color:var(--white)}
 
 /* Keep cards readable as the shorter page alternates section colours. */
 .glance .section-head{margin-bottom:40px}
-.glance h3{font-family:var(--sans);font-size:1.2rem;line-height:1.4;margin:8px 0}
 .glance .glance-grid > div{padding:0 22px}
 main > section.examples .example-grid article{color:var(--navy)}
 main > section.examples .example-grid h3{color:var(--navy)}
