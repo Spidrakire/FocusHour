@@ -103,3 +103,10 @@ main > section.membership .price small{color:inherit}
  .membership-photo{margin-bottom:40px}
  .membership-photo img{height:230px;object-position:55% 58%}
 }
+
+/* Keep the group call visible in the portrait hero photograph. */
+.hero .hero-image img{object-position:50% 65%}
+.together .wrap{max-width:900px}
+.together h2{font-size:clamp(2rem,3.5vw,3.5rem);line-height:1.15}
+.together p{font-size:1.1rem;max-width:760px}
+@media(max-width:850px){.hero .hero-image img{object-position:55% 65%}}
