@@ -110,3 +110,8 @@ main > section.membership .price small{color:inherit}
 .together h2{font-size:clamp(2rem,3.5vw,3.5rem);line-height:1.15}
 .together p{font-size:1.1rem;max-width:760px}
 @media(max-width:850px){.hero .hero-image img{object-position:55% 65%}}
+
+/* A subdued group-call photograph sits behind the community copy. */
+.together{position:relative;isolation:isolate;overflow:hidden}
+.together::before{content:"";position:absolute;inset:0;z-index:-1;background:linear-gradient(90deg,rgba(7,29,54,.92),rgba(7,29,54,.8)),url("images/focus-hour-video-call.png") center 63% / cover no-repeat;pointer-events:none}
+@media(max-width:850px){.together::before{background-position:center,55% 62%}}
