@@ -77,17 +77,20 @@
  <h3>What will you make time for?</h3><p>We're preparing for our first members. Join today and we'll only contact you when there's something worth knowing.</p>
 
  <p><strong>No newsletters. No weekly marketing. No inbox clutter.</strong></p>
- <form class="join-form" action="https://submit-form.com/YOUR_FORMSPARK_ID" method="POST">
-  <input type="hidden" name="_redirect" value="https://YOUR-USERNAME.github.io/YOUR-REPOSITORY/thanks.html">
+ <form class="join-form" name="focus-hour-registration" action="/thanks.html" method="POST" data-netlify="true" netlify-honeypot="bot-field">
+  <input type="hidden" name="form-name" value="focus-hour-registration">
+  <p hidden><label>Leave this field empty<input name="bot-field" tabindex="-1" autocomplete="off"></label></p>
   <label>Your name<input type="text" name="name" autocomplete="name" required></label>
   <label>Email address<input type="email" name="email" autocomplete="email" required></label>
-  <label>What's one thing you'd love to make progress on?<textarea name="focus" rows="4" required></textarea></label>
+  <label>What's one thing you'd love to make progress on?<textarea name="goal" rows="4" required></textarea></label>
   <label class="consent"><input type="checkbox" name="consent" value="yes" required><span>I agree to receive emails needed to administer my Focus Hour registration and membership. See the <a href="privacy.html">privacy notice</a>.</span></label>
   <button class="button" type="submit">Join Focus Hour</button>
+  <p class="form-status" role="status" aria-live="polite" hidden></p>
  </form></div></div></section>
 
 <section class="closing"><div class="wrap"><p class="brand small">Focus Hour<span>.</span></p><h2>One session. One goal. One step closer.</h2><p>Focus Hour exists to help people consistently protect time to do something their future self will be grateful for.</p><strong class="gold">Do something today that your future self will be grateful for.</strong><p class="section-cta"><a class="button" href="#join">Join Focus Hour</a></p></div></section>
 </main>
 <footer><div class="wrap"><span>© <span id="year"></span> Focus Hour</span><a href="privacy.html">Privacy</a></div></footer>
 <script>document.getElementById('year').textContent=new Date().getFullYear();</script>
+<script src="registration.js" defer></script>
 </body></html>
