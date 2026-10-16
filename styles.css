@@ -116,3 +116,11 @@ main > section.membership .price small{color:inherit}
 @media(max-width:850px){.together::before{background-position:center,55% 62%}}
 
 .section-cta{margin:36px 0 0}
+
+/* On small screens, show the complete hero photo beneath the copy. */
+@media(max-width:850px){
+ .hero-copy{padding-bottom:40px}
+ .hero::after{display:none}
+ .hero .hero-image{position:relative;inset:auto;z-index:auto;min-height:0;width:100%;max-width:520px;margin:0 auto}
+ .hero .hero-image img{position:static;inset:auto;display:block;width:100%;height:auto;object-fit:contain;-webkit-mask-image:none;mask-image:none}
+}
