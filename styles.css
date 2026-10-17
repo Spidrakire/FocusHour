@@ -124,3 +124,7 @@ main > section.membership .price small{color:inherit}
  .hero .hero-image{position:relative;inset:auto;z-index:auto;min-height:0;width:100%;max-width:520px;margin:0 auto}
  .hero .hero-image img{position:static;inset:auto;display:block;width:100%;height:auto;object-fit:contain;-webkit-mask-image:none;mask-image:none}
 }
+
+.join-form select{width:100%;display:block;margin-top:8px;border:1px solid #c8cfd5;border-radius:7px;background:#fff;padding:14px;font:inherit;color:var(--navy)}
+.join-form select:focus{outline:3px solid rgba(244,170,18,.28);border-color:var(--gold)}
+.join-form button:disabled{opacity:.65;cursor:wait}
