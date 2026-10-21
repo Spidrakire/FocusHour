@@ -1,7 +1,6 @@
 import { formatDate, sessionDates } from './session-dates.mjs';
 const form = document.querySelector('form[name="focus-hour-registration"]');
 const button = form.querySelector('button[type="submit"]');
-const retry = document.querySelector('#retry-dates');
 const select = form.elements['first-session-date'];
 const status = form.querySelector('.form-status');
 let submitting = false;
@@ -17,6 +16,7 @@ function setDates(starts) {
   select.selectedIndex = -1;
   if (starts.includes(previous)) select.value = previous;
   select.disabled = false;
+  button.type = 'submit';
   button.disabled = false;
   return !previous || starts.includes(previous);
 }
@@ -26,23 +26,32 @@ async function refresh() {
   const data = await response.json();
   if (!Array.isArray(data.starts) || data.starts.length !== 2 || !data.starts.every(x => /^\d{4}-\d{2}-\d{2}$/.test(x))) throw new Error('Invalid dates');
   const valid = setDates(data.starts);
-  retry.hidden = true;
   return valid;
 }
 async function loadDates() {
   if (submitting || refreshing) return;
   refreshing = true;
+  button.disabled = true;
   try {
     const valid = await refresh();
     if (!valid) message('That session has started. Please choose another Monday.', true);
+    else if (button.type === 'submit' && status.textContent.includes('load the available dates')) {
+      status.hidden = true;
+      status.textContent = '';
+    }
   } catch {
-    button.disabled = true;
+    button.type = 'button';
+    button.disabled = false;
     select.disabled = true;
-    retry.hidden = false;
-    message('We couldn’t load the available dates. Please try again.', true);
+    message('We couldn’t load the available dates. Select Join Focus Hour to try again.', true);
   } finally { refreshing = false; }
 }
-retry.addEventListener('click', loadDates);
+button.addEventListener('click', event => {
+  if (select.disabled) {
+    event.preventDefault();
+    loadDates();
+  }
+});
 loadDates();
 setInterval(loadDates, 30000);
 document.addEventListener('visibilitychange', () => { if (!document.hidden) loadDates(); });
