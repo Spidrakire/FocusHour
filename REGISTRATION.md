@@ -4,13 +4,13 @@ This static site uses Netlify Forms for storage. No payment, database or email p
 
 ## Deploy and verify before accepting registrations
 
-1. Deploy this repository on Netlify, with publish directory `.` (set in `netlify.toml`). Enable Forms detection, then redeploy. Confirm `focus-hour-registration` appears in the Forms dashboard with `name`, `email`, `goal`, `consent`, `first-session-date` and the honeypot.
+1. Deploy this repository on Netlify, with publish directory `.` (set in `netlify.toml`). Enable Forms detection, then redeploy. Confirm `focus-hour-registration` appears in the Forms dashboard with `name`, `email`, `goal`, `MARKETING_CONSENT`, `first-session-date` and the honeypot.
 2. Confirm the `registration` Edge Function is deployed on `/*`. GET `/api/session-dates` must return two ISO dates and `Cache-Control: no-store`. GitHub Pages and a plain static server cannot run this endpoint: the form deliberately stays disabled there.
 3. POST a synthetic registration with an expired start date to `/` and `/thanks.html`. Expect HTTP 400, and confirm neither appears in Forms. This checks that direct POSTs cannot bypass the date gate.
-4. Submit an authorised test registration through the form. Confirm its first-session date and consent are stored in Netlify Forms and that the confirmation page shows four Mondays. This is required to verify the interaction between Edge Functions and Netlify's Forms processing on the actual deployed site; local mocked tests do not prove hosted storage works.
+4. Submit an authorised test registration through the form. Confirm its first-session date and marketing preference are stored in Netlify Forms and that the confirmation page shows four Mondays. This is required to verify the interaction between Edge Functions and Netlify's Forms processing on the actual deployed site; local mocked tests do not prove hosted storage works.
 5. Arrange manual email delivery of joining instructions before inviting real visitors. Confirmation promises future joining instructions, but does not claim any email was sent. No automated email integration or private meeting URL is included.
 
-The selected first name is submitted under the existing `name` field; `first-session-date` is YYYY-MM-DD. Existing goal and consent are retained.
+The selected first name is submitted under the existing `name` field; `first-session-date` is YYYY-MM-DD. The goal is retained. `MARKETING_CONSENT` stores the separate optional marketing choice as `true` or `false` (form-encoded strings). It defaults to `false`; essential session emails do not require marketing consent.
 
 ## Date rules
 
@@ -20,4 +20,4 @@ Confirmation is created only after the server's accepted response. It uses sessi
 
 ## Tests
 
-Run `node --test tests/session-dates.test.mjs`. Tests cover weekdays, the exact Monday boundary in GMT and BST, clock changes, year rollover, four consecutive Mondays, invalid/expired dates, honeypot and consent, direct POST rejection, and downstream storage failure.
+Run `node --test tests/*.test.mjs`. Tests cover weekdays, the exact Monday boundary in GMT and BST, clock changes, year rollover, four consecutive Mondays, invalid/expired dates, honeypot and both marketing choices, direct POST rejection, and downstream storage failure.

@@ -25,12 +25,13 @@ export function formatDate(iso) {
   }).format(new Date(`${iso}T12:00:00Z`)).replace(',', '');
 }
 export function validateRegistration(data, now = new Date()) {
-  for (const field of ['form-name', 'name', 'email', 'goal', 'consent', 'first-session-date', 'bot-field']) {
+  for (const field of ['form-name', 'name', 'email', 'goal', 'MARKETING_CONSENT', 'first-session-date', 'bot-field']) {
     if (data.getAll(field).length > 1) return 'Invalid registration.';
   }
   if (data.get('bot-field')) return 'Invalid registration.';
   if (!String(data.get('name') || '').trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(String(data.get('email') || '')) ||
-      !String(data.get('goal') || '').trim() || data.get('consent') !== 'yes') return 'Please complete the required fields and consent.';
+      !String(data.get('goal') || '').trim()) return 'Please complete the required fields.';
+  if (!['true', 'false'].includes(data.get('MARKETING_CONSENT'))) return 'Invalid marketing preference.';
   if (!availableStarts(now).includes(data.get('first-session-date'))) return 'Please choose an available first-session date.';
   return null;
 }
