@@ -1,6 +1,6 @@
 # Focus Hour registration
 
-This static site uses Netlify Forms for storage. No payment, database or email provider is included.
+Netlify Forms is the registration system of record. Verified registrations are queued for contact synchronisation with Brevo.
 
 ## Deploy and verify before accepting registrations
 
@@ -21,3 +21,11 @@ Confirmation is created only after the server's accepted response. It uses sessi
 ## Tests
 
 Run `node --test tests/*.test.mjs`. Tests cover weekdays, the exact Monday boundary in GMT and BST, clock changes, year rollover, four consecutive Mondays, invalid/expired dates, honeypot and both marketing choices, direct POST rejection, and downstream storage failure.
+
+## Brevo contact sync
+
+The scheduled worker checks the queue every 15 minutes, even when it is empty. Keep the existing server-side `BREVO_API_KEY` available to production Functions only. Without it, the event handler and worker skip synchronisation. Before a future rollout, verify list 6 is Registration and that Brevo defines `FIRSTNAME` as text, `FIRST_SESSION_DATE` as a date, `MARKETING_CONSENT` as a boolean and `MEMBERSHIP_STATUS` with support for the value `FREE_TRIAL`.
+
+Temporary errors are retried with backoff and respect Brevo's Retry-After header. Permanent failures remain in the queue for investigation. Match the submission ID from the function log to Netlify Forms. After fixing the cause, an operator can reset the failed queue entry for retry. If the verified event fails before the queue write, recover the registration from Forms. Successful jobs remove queued contact data and keep only a completion marker for deduplication. A worker interruption after Brevo accepts a write can cause the contact operation to be repeated.
+
+Registration list membership and essential joining instructions are independent of the optional marketing choice. The sync leaves existing email unsubscribe settings alone and sends no emails. When a hosted check is authorised, verify the stored contact fields and list membership using an authorised synthetic registration.
