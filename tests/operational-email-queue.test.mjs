@@ -63,7 +63,7 @@ test('reminder is never delivered without fresh verified membership', async () =
   await deliverQueuedEmails(s, { ...opts,
     fetcher: async () => { sends++; return new Response(null, { status: 201 }); } });
   assert.equal(sends, 0);
-  await deliverQueuedEmails(s, { ...opts,
+  await deliverQueuedEmails(s, { ...opts, now: () => Date.parse('2026-11-23T09:00:00Z'),
     getCurrentRegistration: async () => ({ ...registration, cancelled: true }),
     fetcher: async () => { sends++; return new Response(null, { status: 201 }); } });
   assert.equal(sends, 0);
@@ -73,7 +73,7 @@ test('reminder is sent once when current booking is verified', async () => {
   const s = store();
   await queueReminder(s, registration, '2026-11-23');
   let sends = 0;
-  const options = { ...opts,
+  const options = { ...opts, now: () => Date.parse('2026-11-23T09:00:00Z'),
     getCurrentRegistration: async () => registration,
     fetcher: async () => { sends++; return new Response(null, { status: 201 }); } };
   await deliverQueuedEmails(s, options);
