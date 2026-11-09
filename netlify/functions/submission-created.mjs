@@ -10,25 +10,16 @@ export default async function (request) {
   if (payload?.form_name !== 'focus-hour-registration') return new Response(null, { status: 204 });
 
   const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) {
-    console.error('Brevo registration sync skipped: BREVO_API_KEY unavailable at runtime');
-    return new Response(null, { status: 204 });
-  }
+  if (!apiKey) console.error('Brevo registration sync skipped: BREVO_API_KEY unavailable at runtime');
 
-  const store = getStore({ name: 'brevo-registration', consistency: 'strong' });
-  try {
-    await enqueue(store, payload);
-  } catch (error) {
-    // Netlify Forms is the source of truth: do not log personal registration data.
-    console.error('Brevo registration could not be queued', error?.name ?? 'error');
-    throw error;
-  }
-
-  try {
-    await drain(store, registration => syncContact(registration, apiKey));
-  } catch (error) {
-    // The durable queue remains available for the scheduled retry worker.
-    console.error('Immediate Brevo registration sync deferred to retry worker', error?.name ?? 'error');
+  if (apiKey) {
+    const store = getStore({ name: 'brevo-registration', consistency: 'strong' });
+    try {
+      await enqueue(store, payload);
+      await drain(store, registration => syncContact(registration, apiKey));
+    } catch (error) {
+      console.error('Brevo registration sync deferred to reconciliation', error?.name ?? 'error');
+    }
   }
   // Welcome delivery is independent of the contact synchronisation result.
   // Only verified form-submission events may reach this handler.
