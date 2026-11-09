@@ -8,6 +8,7 @@ import { registrationKey } from '../verified-members.mjs';
 export const config = { schedule: '*/15 * * * *' };
 
 export default async function () {
+  if (process.env.CONTEXT && process.env.CONTEXT !== 'production') return;
   const apiKey = process.env.BREVO_API_KEY;
   const meetUrl = process.env.GOOGLE_MEET_URL;
   if (!apiKey || !meetUrl) {
