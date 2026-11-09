@@ -19,8 +19,13 @@ export function trialIncludes(firstMonday, sessionMonday) {
 export function eligibleForReminder(registration, sessionMonday) {
   if (!registration || registration.cancelled || registration.booked !== true) return false;
   if (!mondayDate(sessionMonday)) return false;
-  if (registration.membershipStatus === 'PAID' && registration.paymentVerified === true) return true;
-  return registration.membershipStatus !== 'EXPIRED' &&
+  if (registration.membershipStatus === 'PAID') {
+    // A verified payment alone does not prove that this particular Monday is booked.
+    return registration.paymentVerified === true &&
+      Array.isArray(registration.paidSessionDates) &&
+      registration.paidSessionDates.includes(sessionMonday);
+  }
+  return registration.membershipStatus === 'FREE_TRIAL' &&
     trialIncludes(registration.firstSessionDate, sessionMonday);
 }
 export function londonParts(now) {
