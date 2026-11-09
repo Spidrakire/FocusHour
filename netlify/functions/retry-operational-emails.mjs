@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { deliverQueuedEmails } from '../operational-email-queue.mjs';
+import { registrationKey } from '../verified-members.mjs';
 
 // Retry previously queued welcome emails. This worker does not create reminders.
 // The Monday 9am scheduler must not be enabled until verified booking records
@@ -15,6 +16,9 @@ export default async function () {
   }
   await deliverQueuedEmails(
     getStore({ name: 'focus-hour-operational-email', consistency: 'strong' }),
-    { apiKey, meetUrl },
+    { apiKey, meetUrl,
+      getCurrentRegistration: email => getStore({ name: 'focus-hour-verified-members', consistency: 'strong' })
+        .get(registrationKey(email), { type: 'json' }),
+    },
   );
 }
