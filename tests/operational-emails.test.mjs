@@ -19,7 +19,8 @@ test('reminders require booking and valid access, not marketing consent', () => 
   assert.equal(eligibleForReminder({ ...member, cancelled: true }, '2026-11-23'), false);
   assert.equal(eligibleForReminder(member, '2026-12-14'), false);
   assert.equal(eligibleForReminder({ ...member, membershipStatus: 'PAID' }, '2026-12-14'), false);
-  assert.equal(eligibleForReminder({ ...member, membershipStatus: 'PAID', paymentVerified: true }, '2026-12-14'), true);
+  assert.equal(eligibleForReminder({ ...member, membershipStatus: 'PAID', paymentVerified: true }, '2026-12-14'), false);
+  assert.equal(eligibleForReminder({ ...member, membershipStatus: 'PAID', paymentVerified: true, paidSessionDates: ['2026-12-14'] }, '2026-12-14'), true);
   assert.equal(eligibleForReminder({ ...member, membershipStatus: 'EXPIRED' }, '2026-11-23'), false);
 });
 test('9am London follows BST and GMT, and is Monday only', () => {
