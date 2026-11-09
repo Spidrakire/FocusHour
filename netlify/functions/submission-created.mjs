@@ -7,6 +7,8 @@ import { recordVerifiedRegistration } from '../verified-members.mjs';
 // Queue the record first, then attempt the Brevo sync immediately. The scheduled
 // worker independently retries jobs if Brevo is unavailable or this invocation fails.
 export default async function (request) {
+  // Site-wide Blobs are shared between deploy contexts. Never process preview forms.
+  if (process.env.CONTEXT && process.env.CONTEXT !== 'production') return new Response(null, { status: 204 });
   const { payload } = await request.json();
   if (payload?.form_name !== 'focus-hour-registration') return new Response(null, { status: 204 });
 
