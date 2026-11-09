@@ -2,9 +2,9 @@
 
 **Status:** copy only, not implemented, scheduled or sent.
 
-**Audience:** registered participants whose four consecutive trial Mondays include the session date, and paying members with access to that session. Do not treat marketing consent as a condition for operational reminders.
+**Audience:** **everyone booked and eligible for that Monday's session**, including participants within their four consecutive free Mondays and paying members. Do not treat marketing consent as a condition for operational reminders.
 
-**Suggested timing:** the morning of each Monday session, UK local time. Same-day registrants must receive their immediate welcome/joining instructions rather than waiting for a scheduled reminder.
+**Suggested timing:** **9.00am every Monday in Europe/London**, accounting for GMT and BST. Same-day registrants, including those registering after 9.00am and before the 6.30pm cut-off, must receive their joining instructions immediately after registration and in an essential welcome email. They must not be required to wait for the next reminder.
 
 **Subject:** Your Focus Hour is tonight at 6.30pm
 
@@ -33,6 +33,8 @@ focushour.co.uk
 - Use the Europe/London time zone so the reminder stays correct across GMT and BST.
 - Do not send a reminder for a session already finished or to somebody who is not eligible.
 - Keep private meeting URLs in protected server-side configuration, never in public assets or repository files.
-- Track delivery attempts by recipient and session date to avoid duplicate sends.
+- Track delivery attempts by recipient and session date to avoid duplicate sends. Check eligibility and booking status at send time, including cancellations and trial expiry.
+- Send at most one scheduled reminder per eligible recipient per Monday session. Registrations after 9.00am receive immediate joining details, not a retroactive 9.00am reminder.
+- Do not send a reminder to someone whose trial has expired unless paid access has been verified.
 - Suppress only non-essential marketing based on marketing consent; essential session messages have a separate purpose.
 - Do not claim reminder automation is active until end-to-end delivery is verified.
