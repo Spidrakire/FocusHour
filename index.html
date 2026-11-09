@@ -88,7 +88,9 @@
   <label>When would you like to start your four free Focus Hours?<select name="first-session-date" required disabled aria-describedby="session-details"></select></label>
   <p id="session-details">Live, online sessions in a small group, Mondays, 6.30–7.45pm UK time. No payment details are required and there is no obligation to continue afterwards. Continuing membership is £19/month if you choose to subscribe.</p>
   <noscript><p>Please enable JavaScript to load current session dates and register.</p></noscript>
-  <label class="consent"><input type="checkbox" name="consent" value="yes" required><span>I agree to receive emails needed to administer my Focus Hour registration and membership. See the <a href="privacy.html">privacy notice</a>.</span></label>
+  <p>By registering, you'll receive essential emails about your Focus Hour sessions, including joining details and reminders. See our <a href="privacy.html">privacy notice</a>.</p>
+  <input type="hidden" name="MARKETING_CONSENT" value="false">
+  <label class="consent"><input type="checkbox" id="marketing-consent"><span>I'd also like to receive occasional emails about Focus Hour news, events and offers.</span></label>
   <button class="button" type="submit" disabled>Join Focus Hour</button>
   <p class="form-status" role="status" aria-live="polite" hidden></p>
  </form></div></div></section>
