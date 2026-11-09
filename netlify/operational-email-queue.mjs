@@ -26,7 +26,7 @@ export async function queueReminder(store, registration, sessionDate) {
   }, { onlyIfNew: true });
   return true;
 }
-export async function deliverQueuedEmails(store, { apiKey, meetUrl, now = Date.now, fetcher = fetch, report = console.error }) {
+export async function deliverQueuedEmails(store, { apiKey, meetUrl, now = Date.now, fetcher = fetch, report = console.error, getCurrentRegistration }) {
   if (!apiKey || !meetUrl) throw new Error('Operational email configuration missing');
   const started = now();
   for await (const { blobs } of store.list({ prefix: 'pending/', paginate: true })) {
@@ -38,6 +38,17 @@ export async function deliverQueuedEmails(store, { apiKey, meetUrl, now = Date.n
       if (!['welcome', 'reminder'].includes(job.type) || !validId(job.id)) continue;
       const doneKey = `done/${job.type}/${job.id}`;
       if (await store.get(doneKey)) { await store.delete(key); continue; }
+      if (job.type === 'reminder') {
+        // Never send a queued reminder after a cancellation or expiry.
+        // Without a verified membership lookup, fail closed rather than send.
+        if (typeof getCurrentRegistration !== 'function') continue;
+        const member = await getCurrentRegistration(job.email);
+        if (!member || member.id !== job.id.slice(11) ||
+            !eligibleForReminder(member, job.sessionDate)) {
+          await store.delete(key);
+          continue;
+        }
+      }
       const claim = await store.setJSON(key, { ...job, nextAttempt: now() + 60_000 }, { onlyIfMatch: entry.etag });
       if (!claim.modified) continue;
       try {
