@@ -48,7 +48,7 @@ export function humanMonday(value) {
   if (!date) throw new Error('Invalid session date');
   return new Intl.DateTimeFormat('en-GB', {
     timeZone: 'UTC', weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-  }).format(date);
+  }).format(date).replace(',', '');
 }
 export function welcomeEmail({ firstName, firstSessionDate, meetUrl }) {
   if (!firstName?.trim() || !mondayDate(firstSessionDate)) throw new Error('Invalid welcome details');
