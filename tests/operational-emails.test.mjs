@@ -14,7 +14,7 @@ test('trial covers four consecutive Mondays, not four attended sessions', () => 
   assert.equal(trialIncludes('2026-11-17', '2026-11-23'), false);
 });
 test('reminders require booking and valid access, not marketing consent', () => {
-  const member = { firstSessionDate: '2026-11-16', membershipStatus: 'FREE_TRIAL', marketingConsent: false };
+  const member = { booked: true, firstSessionDate: '2026-11-16', membershipStatus: 'FREE_TRIAL', marketingConsent: false };
   assert.equal(eligibleForReminder(member, '2026-11-23'), true);
   assert.equal(eligibleForReminder({ ...member, cancelled: true }, '2026-11-23'), false);
   assert.equal(eligibleForReminder(member, '2026-12-14'), false);
