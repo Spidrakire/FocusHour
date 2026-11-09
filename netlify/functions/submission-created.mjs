@@ -1,6 +1,7 @@
 import { getStore } from '@netlify/blobs';
 import { enqueue, drain, syncContact } from '../registration-sync.mjs';
 import { queueWelcome, deliverQueuedEmails } from '../operational-email-queue.mjs';
+import { recordVerifiedRegistration } from '../verified-members.mjs';
 
 // Netlify invokes this legacy event handler only after a form submission is verified.
 // Queue the record first, then attempt the Brevo sync immediately. The scheduled
@@ -21,16 +22,13 @@ export default async function (request) {
       console.error('Brevo registration sync deferred to reconciliation', error?.name ?? 'error');
     }
   }
-  // Welcome delivery is independent of the contact synchronisation result.
-  // Only verified form-submission events may reach this handler.
+  // Persist the verified booking first. Repeated submissions must not reset trials.
   try {
+    const members = getStore({ name: 'focus-hour-verified-members', consistency: 'strong' });
+    const { registration } = await recordVerifiedRegistration(members, payload);
     const emailStore = getStore({ name: 'focus-hour-operational-email', consistency: 'strong' });
-    await queueWelcome(emailStore, {
-      id: payload.id,
-      email: payload.data?.email?.trim().toLowerCase(),
-      firstName: payload.data?.name?.trim(),
-      firstSessionDate: payload.data?.['first-session-date'],
-    });
+    // Only the original booking receives a welcome, including on event replay.
+    await queueWelcome(emailStore, registration);
     if (process.env.GOOGLE_MEET_URL) {
       await deliverQueuedEmails(emailStore, {
         apiKey,
