@@ -1,5 +1,6 @@
 import { getStore } from '@netlify/blobs';
 import { enqueue, drain, syncContact } from '../registration-sync.mjs';
+import { queueWelcome, deliverQueuedEmails } from '../operational-email-queue.mjs';
 
 // Netlify invokes this legacy event handler only after a form submission is verified.
 // Queue the record first, then attempt the Brevo sync immediately. The scheduled
@@ -28,6 +29,27 @@ export default async function (request) {
   } catch (error) {
     // The durable queue remains available for the scheduled retry worker.
     console.error('Immediate Brevo registration sync deferred to retry worker', error?.name ?? 'error');
+  }
+  // Welcome delivery is independent of the contact synchronisation result.
+  // Only verified form-submission events may reach this handler.
+  try {
+    const emailStore = getStore({ name: 'focus-hour-operational-email', consistency: 'strong' });
+    await queueWelcome(emailStore, {
+      id: payload.id,
+      email: payload.data?.email?.trim().toLowerCase(),
+      firstName: payload.data?.name?.trim(),
+      firstSessionDate: payload.data?.['first-session-date'],
+    });
+    if (process.env.GOOGLE_MEET_URL) {
+      await deliverQueuedEmails(emailStore, {
+        apiKey,
+        meetUrl: process.env.GOOGLE_MEET_URL,
+      });
+    } else {
+      console.error('Operational welcome queued but meeting URL unavailable');
+    }
+  } catch (error) {
+    console.error('Operational welcome delivery deferred', error?.name ?? 'error');
   }
   return new Response(null, { status: 204 });
 }
