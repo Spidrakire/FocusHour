@@ -17,7 +17,7 @@ export function trialIncludes(firstMonday, sessionMonday) {
   return Array.from({ length: 4 }, (_, i) => addMondays(firstMonday, i)).includes(sessionMonday);
 }
 export function eligibleForReminder(registration, sessionMonday) {
-  if (!registration || registration.cancelled || registration.booked === false) return false;
+  if (!registration || registration.cancelled || registration.booked !== true) return false;
   if (!mondayDate(sessionMonday)) return false;
   if (registration.membershipStatus === 'PAID' && registration.paymentVerified === true) return true;
   return registration.membershipStatus !== 'EXPIRED' &&
