@@ -31,3 +31,7 @@
 - Netlify hosted submission event delivery and Brevo connectivity are not verified.
 - The new tests have not yet been executed in an environment with the repository and Node runtime.
 - Any permanent failure or missing API key requires reconciliation against Netlify Forms.
+
+## Confirmed meeting platform
+
+Google Meet is the selected platform for Monday Focus Hour sessions. Use a meeting link controlled by the organiser. The actual link has not yet been supplied or configured. Keep it out of GitHub and public static assets. A protected server-side configuration and an authenticated or single-use registration receipt are needed before claiming the success page can securely reveal the link. Operational welcome and reminder emails may include the link after registration is verified; test delivery and avoid exposing the link in logs. Confirm whether the organiser will use one recurring Meet link or a separate link for each Monday before implementing link selection.
