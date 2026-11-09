@@ -52,7 +52,7 @@ export function welcomeEmail({ firstName, firstSessionDate, meetUrl }) {
     subject: 'Welcome to Focus Hour! Your first session is booked',
     textContent: `Hi ${firstName.trim()},
 
-Welcome to Focus Hour! Your first session is Monday ${humanMonday(firstSessionDate)}, 6.30–7.45pm UK time.
+Welcome to Focus Hour! Your first session is ${humanMonday(firstSessionDate)}, 6.30–7.45pm UK time.
 
 Join online: ${meetUrl}
 
