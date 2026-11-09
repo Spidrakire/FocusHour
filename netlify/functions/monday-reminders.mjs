@@ -9,7 +9,8 @@ import { queueReminder, deliverQueuedEmails } from '../operational-email-queue.m
 export const config = { schedule: '0 8,9 * * 1' };
 
 export default async function () {
-  if (process.env.CONTEXT && process.env.CONTEXT !== 'production') return;
+  // The meeting URL is provisioned for production only; never touch shared Blobs in previews.
+  if (!process.env.GOOGLE_MEET_URL) return;
   const now = new Date();
   const parts = londonParts(now);
   // Allow scheduler jitter up to 20 minutes, never send before 09:00 London.
