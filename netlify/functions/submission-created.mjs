@@ -1,46 +1,48 @@
 import { getStore } from '@netlify/blobs';
 import { enqueue, drain, syncContact } from '../registration-sync.mjs';
 import { queueWelcome, deliverQueuedEmails } from '../operational-email-queue.mjs';
-import { recordVerifiedRegistration } from '../verified-members.mjs';
+import { recordVerifiedRegistration, registrationKey } from '../verified-members.mjs';
 
-// Netlify invokes this legacy event handler only after a form submission is verified.
-// Queue the record first, then attempt the Brevo sync immediately. The scheduled
-// worker independently retries jobs if Brevo is unavailable or this invocation fails.
+// Legacy Netlify Forms event: only verified submissions invoke this handler.
+// Production-only GOOGLE_MEET_URL gates shared Blobs against preview writes.
 export default async function (request) {
-  // GOOGLE_MEET_URL is configured only for production. This gates shared Blobs.
   if (!process.env.GOOGLE_MEET_URL) return new Response(null, { status: 204 });
   const { payload } = await request.json();
   if (payload?.form_name !== 'focus-hour-registration') return new Response(null, { status: 204 });
 
-  const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey) console.error('Brevo registration sync skipped: BREVO_API_KEY unavailable at runtime');
-
-  if (apiKey) {
-    const store = getStore({ name: 'brevo-registration', consistency: 'strong' });
-    try {
-      await enqueue(store, payload);
-      await drain(store, registration => syncContact(registration, apiKey));
-    } catch (error) {
-      console.error('Brevo registration sync deferred to reconciliation', error?.name ?? 'error');
-    }
-  }
-  // Persist the verified booking first. Repeated submissions must not reset trials.
+  // Prioritise immediate joining details over optional CRM synchronisation.
+  // Preserve the first verified trial when a person submits the form again.
+  let registration;
   try {
     const members = getStore({ name: 'focus-hour-verified-members', consistency: 'strong' });
-    const { registration } = await recordVerifiedRegistration(members, payload);
-    const emailStore = getStore({ name: 'focus-hour-operational-email', consistency: 'strong' });
-    // Only the original booking receives a welcome, including on event replay.
-    await queueWelcome(emailStore, registration);
-    if (process.env.GOOGLE_MEET_URL) {
-      await deliverQueuedEmails(emailStore, {
-        apiKey,
+    ({ registration } = await recordVerifiedRegistration(members, payload));
+    const emails = getStore({ name: 'focus-hour-operational-email', consistency: 'strong' });
+    await queueWelcome(emails, registration);
+    if (process.env.BREVO_API_KEY) {
+      await deliverQueuedEmails(emails, {
+        apiKey: process.env.BREVO_API_KEY,
         meetUrl: process.env.GOOGLE_MEET_URL,
+        // Any pending reminder must still pass its latest eligibility check.
+        getCurrentRegistration: email => members.get(
+          registrationKey(email), { type: 'json' }),
       });
     } else {
-      console.error('Operational welcome queued but meeting URL unavailable');
+      console.error('Welcome queued: Brevo API key unavailable');
     }
   } catch (error) {
-    console.error('Operational welcome delivery deferred', error?.name ?? 'error');
+    console.error('Verified registration or welcome delivery requires reconciliation', error?.name ?? 'error');
+  }
+
+  // A failed CRM sync must never prevent the joining email being attempted.
+  const apiKey = process.env.BREVO_API_KEY;
+  if (apiKey) {
+    try {
+      const store = getStore({ name: 'brevo-registration', consistency: 'strong' });
+      await enqueue(store, payload);
+      await drain(store, job => syncContact(job, apiKey));
+    } catch (error) {
+      console.error('Brevo contact sync deferred to scheduled retry', error?.name ?? 'error');
+    }
   }
   return new Response(null, { status: 204 });
 }
