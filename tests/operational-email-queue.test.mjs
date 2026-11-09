@@ -45,7 +45,7 @@ test('retries failed delivery without exposing private data in error logs', asyn
   assert.ok(!logs.join(' ').includes(registration.email));
   assert.ok(!logs.join(' ').includes(opts.meetUrl));
   let sends = 0;
-  await deliverQueuedEmails(s, { ...opts, now: () => 31_000,
+  await deliverQueuedEmails(s, { ...opts, now: () => 61_000,
     fetcher: async () => { sends++; return new Response(null, { status: 201 }); } });
   assert.equal(sends, 1);
 });
