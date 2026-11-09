@@ -29,3 +29,16 @@ The scheduled worker checks the queue every 15 minutes, even when it is empty. K
 Temporary errors are retried with backoff and respect Brevo's Retry-After header. Permanent failures remain in the queue for investigation. Match the submission ID from the function log to Netlify Forms. After fixing the cause, an operator can reset the failed queue entry for retry. If the verified event fails before the queue write, recover the registration from Forms. Successful jobs remove queued contact data and keep only a completion marker for deduplication. A worker interruption after Brevo accepts a write can cause the contact operation to be repeated.
 
 Registration list membership and essential joining instructions are independent of the optional marketing choice. The sync leaves existing email unsubscribe settings alone and sends no emails. When a hosted check is authorised, verify the stored contact fields and list membership using an authorised synthetic registration.
+
+
+## Pre-launch operational safeguards
+
+The Netlify submission event handler writes a durable queue entry and now attempts an immediate Brevo contact sync. A separate scheduled function drains pending entries every 15 minutes as a fallback. Neither function sends joining instructions or emails. A successful website registration must not depend on Brevo being available.
+
+Before enabling registration for real members, verify the deployed form-submission event payload and trigger behaviour on Netlify. In particular, check that the event includes the verified submission ID and the fields expected by `enqueue`. A locally mocked test cannot establish that Netlify actually invokes the handler. Verify the production Functions runtime has `BREVO_API_KEY` without printing its value.
+
+**Time-critical joining instructions:** the Brevo contact sync is not a substitute for the immediate joining experience. The secure registration success page must show the correct meeting instructions immediately after confirmed submission, and a separate essential-email workflow must deliver them promptly, including registrations on Mondays up to 18:29:59 UK time. Do not publish a claim that joining emails are automated until a real end-to-end test proves delivery. Keep private meeting URLs out of public GitHub files and public website assets.
+
+**Recovery:** Netlify Forms is the system of record. Monitor failed or missing synchronisations and reconcile registrations against Brevo. Jobs marked `failed` after a permanent error will not retry until an operator investigates and resets them. A missing API key causes the event handler to skip sync and requires manual reconciliation of those registrations. Do not log names, email addresses, API keys or private meeting URLs when reporting failures.
+
+**Release discipline:** branch deploys are disabled. Opening a pull request may create a Netlify Deploy Preview. Confirm current Netlify credits, runtime configuration and test data isolation before opening a pull request, merging or deploying. Never run synthetic registrations against production without explicit authorisation.
