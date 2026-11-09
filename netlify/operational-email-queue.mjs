@@ -1,4 +1,4 @@
-import { eligibleForReminder, reminderEmail, welcomeEmail, sendOperationalEmail } from './operational-emails.mjs';
+import { eligibleForReminder, londonParts, londonSessionDate, reminderEmail, welcomeEmail, sendOperationalEmail } from './operational-emails.mjs';
 
 // The queue contains personal data. Use a private Netlify Blobs store only.
 // An accepted Brevo request may be repeated if execution stops before acknowledgement.
@@ -42,6 +42,13 @@ export async function deliverQueuedEmails(store, { apiKey, meetUrl, now = Date.n
         // Never send a queued reminder after a cancellation or expiry.
         // Without a verified membership lookup, fail closed rather than send.
         if (typeof getCurrentRegistration !== 'function') continue;
+        const current = new Date(now());
+        const london = londonParts(current);
+        if (londonSessionDate(current) !== job.sessionDate || london.weekday !== 'Mon' ||
+            Number(london.hour) * 60 + Number(london.minute) >= 18 * 60 + 30) {
+          await store.delete(key);
+          continue;
+        }
         const member = await getCurrentRegistration(job.email);
         if (!member || member.id !== job.id.slice(11) ||
             !eligibleForReminder(member, job.sessionDate)) {
