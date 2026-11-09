@@ -9,6 +9,7 @@ import { queueReminder, deliverQueuedEmails } from '../operational-email-queue.m
 export const config = { schedule: '0 8,9 * * 1' };
 
 export default async function () {
+  if (process.env.CONTEXT && process.env.CONTEXT !== 'production') return;
   const now = new Date();
   const parts = londonParts(now);
   // Allow scheduler jitter up to 20 minutes, never send before 09:00 London.
