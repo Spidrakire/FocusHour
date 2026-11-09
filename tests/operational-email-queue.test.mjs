@@ -55,3 +55,28 @@ test('only verified booked and eligible members can be queued for a reminder', a
   assert.equal(await queueReminder(s, { ...registration, booked: false }, '2026-11-23'), false);
   assert.equal(await queueReminder(s, registration, '2026-12-14'), false);
 });
+
+test('reminder is never delivered without fresh verified membership', async () => {
+  const s = store();
+  await queueReminder(s, registration, '2026-11-23');
+  let sends = 0;
+  await deliverQueuedEmails(s, { ...opts,
+    fetcher: async () => { sends++; return new Response(null, { status: 201 }); } });
+  assert.equal(sends, 0);
+  await deliverQueuedEmails(s, { ...opts,
+    getCurrentRegistration: async () => ({ ...registration, cancelled: true }),
+    fetcher: async () => { sends++; return new Response(null, { status: 201 }); } });
+  assert.equal(sends, 0);
+  assert.equal(await s.get('pending/reminder/2026-11-23_form_1'), null);
+});
+test('reminder is sent once when current booking is verified', async () => {
+  const s = store();
+  await queueReminder(s, registration, '2026-11-23');
+  let sends = 0;
+  const options = { ...opts,
+    getCurrentRegistration: async () => registration,
+    fetcher: async () => { sends++; return new Response(null, { status: 201 }); } };
+  await deliverQueuedEmails(s, options);
+  await deliverQueuedEmails(s, options);
+  assert.equal(sends, 1);
+});
