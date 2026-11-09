@@ -125,3 +125,32 @@ test('recovers an expired claim after interruption', async () => {
   await drain(store, async () => ({ done: true }), () => 60_000);
   assert.equal(await store.get('done/submission-1'), 'synced');
 });
+
+
+test('permanent Brevo failures remain available for investigation without repeated calls', async () => {
+  const store = mockStore();
+  await enqueue(store, payload);
+  let calls = 0;
+  const sync = async () => {
+    calls++;
+    return { retry: false, status: 401 };
+  };
+  await drain(store, sync, () => 0, () => {});
+  assert.equal(calls, 1);
+  const pending = await store.get('pending/submission-1');
+  assert.equal(pending.failed, true);
+  assert.equal(pending.attempts, 1);
+  assert.equal(await store.get('done/submission-1'), null);
+  await drain(store, sync, () => 86_400_000, () => {});
+  assert.equal(calls, 1, 'permanent failure must not be retried indefinitely');
+});
+
+test('marketing opt-out remains false for a new contact', async () => {
+  const { calls, fetcher } = mockBrevo([
+    new Response(null, { status: 404 }),
+    new Response(null, { status: 201 }),
+  ]);
+  await syncContact(registration, 'test-key', fetcher);
+  assert.equal(calls[1].body.attributes.MARKETING_CONSENT, false);
+  assert.equal(Object.hasOwn(calls[1].body, 'emailBlacklisted'), false);
+});
