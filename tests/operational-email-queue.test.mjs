@@ -104,3 +104,15 @@ test('a reminder queued for a different Monday is not sent', async () => {
   });
   assert.equal(sends, 0);
 });
+
+test('a cancelled member cannot receive an already queued welcome', async () => {
+  const s = store();
+  await queueWelcome(s, registration);
+  let sends = 0;
+  await deliverQueuedEmails(s, { ...opts,
+    getCurrentRegistration: async () => ({ ...registration, cancelled: true }),
+    fetcher: async () => { sends++; return new Response(null, { status: 201 }); },
+  });
+  assert.equal(sends, 0);
+  assert.equal(await s.get('pending/welcome/form_1'), null);
+});
