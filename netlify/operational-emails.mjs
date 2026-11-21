@@ -96,7 +96,7 @@ focushour.co.uk`,
 }
 function validateMeetUrl(value) {
   if (typeof value !== 'string' || !/^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}\/?$/.test(value)) {
-    throw new Error('Missing or invalid private meeting URL');
+    throw Object.assign(new Error('Missing or invalid private meeting URL'), { deliveryCode: 'INVALID_MEETING_URL' });
   }
 }
 // Call only from a server-side verified-registration workflow, never from browser code.
@@ -114,6 +114,6 @@ export async function sendOperationalEmail({ apiKey, to, message, fetcher = fetc
     redirect: 'error',
     signal: AbortSignal.timeout(8000),
   });
-  if (!response.ok) throw new Error(`Operational email delivery failed (HTTP ${response.status})`);
+  if (!response.ok) throw Object.assign(new Error('Operational email delivery failed'), { deliveryCode: `PROVIDER_HTTP_${response.status}` });
   return true;
 }

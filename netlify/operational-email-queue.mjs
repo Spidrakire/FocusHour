@@ -80,7 +80,7 @@ export async function deliverQueuedEmails(store, { apiKey, meetUrl, now = Date.n
           nextAttempt: now() + Math.min(3600, 30 * 2 ** (attempts - 1)) * 1000,
         }, { onlyIfMatch: claim.etag });
         // Never log personal data, meeting links, API credentials or provider response bodies.
-        report('Operational email delivery deferred', job.type, attempts, error?.name ?? 'error');
+        report('Operational email delivery deferred', job.type, attempts, (/^INVALID_MEETING_URL$|^PROVIDER_HTTP_[0-9]{3}$/.test(error?.deliveryCode ?? '') ? error.deliveryCode : error?.name ?? 'error'));
       }
     }
   }
