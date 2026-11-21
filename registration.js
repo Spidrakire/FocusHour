@@ -70,9 +70,11 @@ form.addEventListener('submit', async event => {
       return;
     }
     message('Sending your registration…');
+    const payload = new URLSearchParams(new FormData(form));
+    payload.set('MARKETING_CONSENT', form.querySelector('#marketing-consent').checked ? 'true' : 'false');
     const response = await fetch('/', {
       method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(new FormData(form)).toString(),
+      body: payload.toString(),
     });
     const result = await response.json();
     if (!response.ok || result.received !== true || result.start !== chosen) {

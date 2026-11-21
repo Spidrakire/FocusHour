@@ -1,16 +1,16 @@
 # Focus Hour registration
 
-This static site uses Netlify Forms for storage. No payment, database or email provider is included.
+Netlify Forms is the registration system of record. Verified registrations are queued for contact synchronisation with Brevo.
 
 ## Deploy and verify before accepting registrations
 
-1. Deploy this repository on Netlify, with publish directory `.` (set in `netlify.toml`). Enable Forms detection, then redeploy. Confirm `focus-hour-registration` appears in the Forms dashboard with `name`, `email`, `goal`, `consent`, `first-session-date` and the honeypot.
+1. Deploy this repository on Netlify, with publish directory `.` (set in `netlify.toml`). Enable Forms detection, then redeploy. Confirm `focus-hour-registration` appears in the Forms dashboard with `name`, `email`, `goal`, `MARKETING_CONSENT`, `first-session-date` and the honeypot.
 2. Confirm the `registration` Edge Function is deployed on `/*`. GET `/api/session-dates` must return two ISO dates and `Cache-Control: no-store`. GitHub Pages and a plain static server cannot run this endpoint: the form deliberately stays disabled there.
 3. POST a synthetic registration with an expired start date to `/` and `/thanks.html`. Expect HTTP 400, and confirm neither appears in Forms. This checks that direct POSTs cannot bypass the date gate.
-4. Submit an authorised test registration through the form. Confirm its first-session date and consent are stored in Netlify Forms and that the confirmation page shows four Mondays. This is required to verify the interaction between Edge Functions and Netlify's Forms processing on the actual deployed site; local mocked tests do not prove hosted storage works.
+4. Submit an authorised test registration through the form. Confirm its first-session date and marketing preference are stored in Netlify Forms and that the confirmation page shows four Mondays. This is required to verify the interaction between Edge Functions and Netlify's Forms processing on the actual deployed site; local mocked tests do not prove hosted storage works.
 5. Arrange manual email delivery of joining instructions before inviting real visitors. Confirmation promises future joining instructions, but does not claim any email was sent. No automated email integration or private meeting URL is included.
 
-The selected first name is submitted under the existing `name` field; `first-session-date` is YYYY-MM-DD. Existing goal and consent are retained.
+The selected first name is submitted under the existing `name` field; `first-session-date` is YYYY-MM-DD. The goal is retained. `MARKETING_CONSENT` stores the separate optional marketing choice as `true` or `false` (form-encoded strings). It defaults to `false`; essential session emails do not require marketing consent.
 
 ## Date rules
 
@@ -20,4 +20,25 @@ Confirmation is created only after the server's accepted response. It uses sessi
 
 ## Tests
 
-Run `node --test tests/session-dates.test.mjs`. Tests cover weekdays, the exact Monday boundary in GMT and BST, clock changes, year rollover, four consecutive Mondays, invalid/expired dates, honeypot and consent, direct POST rejection, and downstream storage failure.
+Run `node --test tests/*.test.mjs`. Tests cover weekdays, the exact Monday boundary in GMT and BST, clock changes, year rollover, four consecutive Mondays, invalid/expired dates, honeypot and both marketing choices, direct POST rejection, and downstream storage failure.
+
+## Brevo contact sync
+
+The scheduled worker checks the queue every 15 minutes, even when it is empty. Keep the existing server-side `BREVO_API_KEY` available to production Functions only. Without it, the event handler and worker skip synchronisation. Before a future rollout, verify list 6 is Registration and that Brevo defines `FIRSTNAME` as text, `FIRST_SESSION_DATE` as a date, `MARKETING_CONSENT` as a boolean and `MEMBERSHIP_STATUS` with support for the value `FREE_TRIAL`.
+
+Temporary errors are retried with backoff and respect Brevo's Retry-After header. Permanent failures remain in the queue for investigation. Match the submission ID from the function log to Netlify Forms. After fixing the cause, an operator can reset the failed queue entry for retry. If the verified event fails before the queue write, recover the registration from Forms. Successful jobs remove queued contact data and keep only a completion marker for deduplication. A worker interruption after Brevo accepts a write can cause the contact operation to be repeated.
+
+Registration list membership and essential joining instructions are independent of the optional marketing choice. The sync leaves existing email unsubscribe settings alone and sends no emails. When a hosted check is authorised, verify the stored contact fields and list membership using an authorised synthetic registration.
+
+
+## Pre-launch operational safeguards
+
+The Netlify submission event handler writes a durable queue entry and now attempts an immediate Brevo contact sync. A separate scheduled function drains pending entries every 15 minutes as a fallback. Neither function sends joining instructions or emails. A successful website registration must not depend on Brevo being available.
+
+Before enabling registration for real members, verify the deployed form-submission event payload and trigger behaviour on Netlify. In particular, check that the event includes the verified submission ID and the fields expected by `enqueue`. A locally mocked test cannot establish that Netlify actually invokes the handler. Verify the production Functions runtime has `BREVO_API_KEY` without printing its value.
+
+**Time-critical joining instructions:** the Brevo contact sync is not a substitute for the immediate joining experience. The secure registration success page must show the correct meeting instructions immediately after confirmed submission, and a separate essential-email workflow must deliver them promptly, including registrations on Mondays up to 18:29:59 UK time. Do not publish a claim that joining emails are automated until a real end-to-end test proves delivery. Keep private meeting URLs out of public GitHub files and public website assets.
+
+**Recovery:** Netlify Forms is the system of record. Monitor failed or missing synchronisations and reconcile registrations against Brevo. Jobs marked `failed` after a permanent error will not retry until an operator investigates and resets them. A missing API key causes the event handler to skip sync and requires manual reconciliation of those registrations. Do not log names, email addresses, API keys or private meeting URLs when reporting failures.
+
+**Release discipline:** branch deploys are disabled. Opening a pull request may create a Netlify Deploy Preview. Confirm current Netlify credits, runtime configuration and test data isolation before opening a pull request, merging or deploying. Never run synthetic registrations against production without explicit authorisation.
