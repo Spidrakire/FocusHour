@@ -2,9 +2,8 @@ import { getStore } from '@netlify/blobs';
 import { deliverQueuedEmails } from '../operational-email-queue.mjs';
 import { registrationKey } from '../verified-members.mjs';
 
-// Retry previously queued welcome emails. This worker does not create reminders.
-// The Monday 9am scheduler must not be enabled until verified booking records
-// and cancellation/payment checks are available.
+// Retry queued welcome emails and reminders. Reminder delivery always checks
+// the current verified booking, cancellation and membership status.
 export const config = { schedule: '*/15 * * * *' };
 
 export default async function () {
