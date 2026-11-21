@@ -38,6 +38,13 @@ export async function deliverQueuedEmails(store, { apiKey, meetUrl, now = Date.n
       if (!['welcome', 'reminder'].includes(job.type) || !validId(job.id)) continue;
       const doneKey = `done/${job.type}/${job.id}`;
       if (await store.get(doneKey)) { await store.delete(key); continue; }
+      if (job.type === 'welcome' && typeof getCurrentRegistration === 'function') {
+        const member = await getCurrentRegistration(job.email);
+        if (!member || member.id !== job.id || member.cancelled || member.booked !== true) {
+          await store.delete(key);
+          continue;
+        }
+      }
       if (job.type === 'reminder') {
         // Never send a queued reminder after a cancellation or expiry.
         // Without a verified membership lookup, fail closed rather than send.
