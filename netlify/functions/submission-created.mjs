@@ -17,7 +17,9 @@ export default async function (request) {
     const members = getStore({ name: 'focus-hour-verified-members', consistency: 'strong' });
     ({ registration } = await recordVerifiedRegistration(members, payload));
     const emails = getStore({ name: 'focus-hour-operational-email', consistency: 'strong' });
-    await queueWelcome(emails, registration);
+    if (!registration.cancelled && registration.booked === true) {
+      await queueWelcome(emails, registration);
+    }
     if (process.env.BREVO_API_KEY) {
       await deliverQueuedEmails(emails, {
         apiKey: process.env.BREVO_API_KEY,
