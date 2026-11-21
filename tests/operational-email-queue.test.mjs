@@ -80,3 +80,27 @@ test('reminder is sent once when current booking is verified', async () => {
   await deliverQueuedEmails(s, options);
   assert.equal(sends, 1);
 });
+
+test('stale Monday reminders are discarded after the session starts', async () => {
+  const s = store();
+  await queueReminder(s, registration, '2026-11-23');
+  let sends = 0;
+  await deliverQueuedEmails(s, { ...opts,
+    now: () => Date.parse('2026-11-23T18:30:00Z'),
+    getCurrentRegistration: async () => registration,
+    fetcher: async () => { sends++; return new Response(null, { status: 201 }); },
+  });
+  assert.equal(sends, 0);
+  assert.equal(await s.get('pending/reminder/2026-11-23_form_1'), null);
+});
+test('a reminder queued for a different Monday is not sent', async () => {
+  const s = store();
+  await queueReminder(s, registration, '2026-11-23');
+  let sends = 0;
+  await deliverQueuedEmails(s, { ...opts,
+    now: () => Date.parse('2026-11-30T09:00:00Z'),
+    getCurrentRegistration: async () => registration,
+    fetcher: async () => { sends++; return new Response(null, { status: 201 }); },
+  });
+  assert.equal(sends, 0);
+});
