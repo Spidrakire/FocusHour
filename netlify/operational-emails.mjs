@@ -52,7 +52,7 @@ export function humanMonday(value) {
 }
 export function welcomeEmail({ firstName, firstSessionDate, meetUrl }) {
   if (!firstName?.trim() || !mondayDate(firstSessionDate)) throw new Error('Invalid welcome details');
-  validateMeetUrl(meetUrl);
+  meetUrl = normaliseMeetUrl(meetUrl);
   return {
     subject: 'Welcome to Focus Hour! Your first session is booked',
     textContent: `Hi ${firstName.trim()},
@@ -74,7 +74,7 @@ focushour.co.uk`,
 }
 export function reminderEmail({ firstName, sessionDate, meetUrl }) {
   if (!firstName?.trim() || !mondayDate(sessionDate)) throw new Error('Invalid reminder details');
-  validateMeetUrl(meetUrl);
+  meetUrl = normaliseMeetUrl(meetUrl);
   return {
     subject: 'Your Focus Hour is tonight at 6.30pm',
     textContent: `Hi ${firstName.trim()},
@@ -94,10 +94,19 @@ Focus Hour
 focushour.co.uk`,
   };
 }
-function validateMeetUrl(value) {
-  if (typeof value !== 'string' || !/^https:\/\/meet\.google\.com\/[a-z]{3}-[a-z]{4}-[a-z]{3}\/?$/.test(value)) {
-    throw Object.assign(new Error('Missing or invalid private meeting URL'), { deliveryCode: 'INVALID_MEETING_URL' });
-  }
+export function normaliseMeetUrl(value) {
+  const invalid = () => Object.assign(new Error('Missing or invalid private meeting URL'), {
+    deliveryCode: 'INVALID_MEETING_URL',
+  });
+  if (typeof value !== 'string') throw invalid();
+  let input = value.trim();
+  if (input.startsWith('meet.google.com/')) input = 'https://' + input;
+  let url;
+  try { url = new URL(input); } catch { throw invalid(); }
+  if (url.protocol !== 'https:' || url.hostname !== 'meet.google.com' ||
+      url.username || url.password || url.port ||
+      !/^\/[a-z]{3}-[a-z]{4}-[a-z]{3}\/?$/.test(url.pathname)) throw invalid();
+  return 'https://meet.google.com' + url.pathname.replace(/\/$/, '');
 }
 // Call only from a server-side verified-registration workflow, never from browser code.
 export async function sendOperationalEmail({ apiKey, to, message, fetcher = fetch }) {

@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
   addMondays, trialIncludes, eligibleForReminder, reminderDue, londonSessionDate,
-  welcomeEmail, reminderEmail, sendOperationalEmail,
+  welcomeEmail, reminderEmail, sendOperationalEmail, normaliseMeetUrl,
 } from '../netlify/operational-emails.mjs';
 
 const meetUrl = 'https://meet.google.com/abc-defg-hij';
@@ -54,4 +54,13 @@ test('transactional transport sends with verified sender, regardless of marketin
   }), true);
   assert.equal(body.sender.email, 'hello@focushour.co.uk');
   assert.equal(body.to[0].email, 'ada@example.com');
+});
+
+test('normalises copied Google Meet links without allowing other destinations', () => {
+  for (const input of [meetUrl, '  ' + meetUrl + '  ', 'meet.google.com/abc-defg-hij', meetUrl + '/?authuser=0#details']) {
+    assert.equal(normaliseMeetUrl(input), meetUrl);
+  }
+  for (const input of ['http://meet.google.com/abc-defg-hij', 'https://meet.google.com.evil.example/abc-defg-hij', 'https://user@meet.google.com/abc-defg-hij', 'https://meet.google.com:444/abc-defg-hij', 'https://meet.google.com/not-a-meeting', 'Join ' + meetUrl]) {
+    assert.throws(() => normaliseMeetUrl(input), error => error.deliveryCode === 'INVALID_MEETING_URL');
+  }
 });
